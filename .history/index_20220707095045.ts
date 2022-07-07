@@ -150,32 +150,18 @@ server.post("/api/v4/order", async (req: Request, res: Response) => {
     
     // calculate price
     const price = calculatePrice(quantity, sp);
-    const date = new Date().toLocaleDateString();
+    console.log(price)
     
     // insert the order
-    const data = new orderModel({ product_id, product_name, quantity, price, buyer:"Parbat", createdOn:date });
+    const data = new orderModel({ product_id, product_name, quantity, price });
     const result = await data.save();
-    return res.status(200).send({
-      message: `Order placed successfully !!. Your order ID is ${result._id}`,
-      bill: {
-        order_id: result._id,
-        quantity: quantity,
-        price: price,
-        buyer:"Parbat",
-        date:date
-      }
-    });
+    return res.status(200).send("Order placed successfully !!");
   } catch (error) {
     return res.status(500).send("500 INTERNAL SERVER ERROR !");
   }
-});
-server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
-  try {
-    const result = await orderModel.find({ buyer: "Parbat" });
-    res.status(200).send(result)
-  } catch (error) {
-    res.status(500).send("500 INTERNAL SERVER ERROR");
-  }
+  
+  res.send({ product_id, product_name, quantity })
+  
 })
 
 

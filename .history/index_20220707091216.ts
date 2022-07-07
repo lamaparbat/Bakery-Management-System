@@ -10,9 +10,6 @@ const cookieParser = require("cookie-parser");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
-const orderModel = require("./db/models/orderModel");
-const isProductGenuine = require("./db/library/checkProduct");
-const calculatePrice = require("./db/library/calculatePrice");
 
 // ***** -> server instances || config  <- *****
 const server = express();
@@ -127,56 +124,11 @@ server.get("/api/v4/product/getDetails", async (req: Request, res: Response) => 
   // db mapping
   try {
     const items = await itemsModel.find({_id});
-    return res.status(200).send(items);
+    res.status(200).send(items);
   } catch (error) {
-    return res.status(500).send("Items not found !!");
+    res.status(500).send("500 INTERNAL SERVER ERORR !!");
   }
 });
-
-// ********* -> ORDER & BILLING  <- ********
-server.post("/api/v4/order", async (req: Request, res: Response) => {
-  // destructuring incoming req object
-  const { product_id, product_name, quantity } = req.body;
-  
-  // db logic
-  try {
-    // check if product is genuine or not
-    if (!isProductGenuine(product_id))
-      return res.status(404).send("Product not found !!");
-    
-    // get the sp of given product
-    const itemObject = await itemsModel.find({ type: product_name });
-    const { sp } = itemObject[0];
-    
-    // calculate price
-    const price = calculatePrice(quantity, sp);
-    const date = new Date().toLocaleDateString();
-    
-    // insert the order
-    const data = new orderModel({ product_id, product_name, quantity, price, buyer:"Parbat", createdOn:date });
-    const result = await data.save();
-    return res.status(200).send({
-      message: `Order placed successfully !!. Your order ID is ${result._id}`,
-      bill: {
-        order_id: result._id,
-        quantity: quantity,
-        price: price,
-        buyer:"Parbat",
-        date:date
-      }
-    });
-  } catch (error) {
-    return res.status(500).send("500 INTERNAL SERVER ERROR !");
-  }
-});
-server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
-  try {
-    const result = await orderModel.find({ buyer: "Parbat" });
-    res.status(200).send(result)
-  } catch (error) {
-    res.status(500).send("500 INTERNAL SERVER ERROR");
-  }
-})
 
 
 // ***** -> port listener  <-  *****

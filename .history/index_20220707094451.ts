@@ -12,7 +12,6 @@ const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
 const orderModel = require("./db/models/orderModel");
 const isProductGenuine = require("./db/library/checkProduct");
-const calculatePrice = require("./db/library/calculatePrice");
 
 // ***** -> server instances || config  <- *****
 const server = express();
@@ -145,37 +144,19 @@ server.post("/api/v4/order", async (req: Request, res: Response) => {
       return res.status(404).send("Product not found !!");
     
     // get the sp of given product
-    const itemObject = await itemsModel.find({ type: product_name });
-    const { sp } = itemObject[0];
-    
-    // calculate price
-    const price = calculatePrice(quantity, sp);
-    const date = new Date().toLocaleDateString();
+    const {sp} = await itemsModel.find({ type: product_name });
+    console.log(sp)
     
     // insert the order
-    const data = new orderModel({ product_id, product_name, quantity, price, buyer:"Parbat", createdOn:date });
+    const data = new orderModel({ product_id, product_name, quantity });
     const result = await data.save();
-    return res.status(200).send({
-      message: `Order placed successfully !!. Your order ID is ${result._id}`,
-      bill: {
-        order_id: result._id,
-        quantity: quantity,
-        price: price,
-        buyer:"Parbat",
-        date:date
-      }
-    });
+    return res.status(200).send("Order placed successfully !!");
   } catch (error) {
     return res.status(500).send("500 INTERNAL SERVER ERROR !");
   }
-});
-server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
-  try {
-    const result = await orderModel.find({ buyer: "Parbat" });
-    res.status(200).send(result)
-  } catch (error) {
-    res.status(500).send("500 INTERNAL SERVER ERROR");
-  }
+  
+  res.send({ product_id, product_name, quantity })
+  
 })
 
 

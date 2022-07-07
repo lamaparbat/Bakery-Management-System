@@ -161,7 +161,6 @@ server.post("/api/v4/order", async (req: Request, res: Response) => {
         order_id: result._id,
         quantity: quantity,
         price: price,
-        buyer:"Parbat",
         date:date
       }
     });
@@ -169,13 +168,8 @@ server.post("/api/v4/order", async (req: Request, res: Response) => {
     return res.status(500).send("500 INTERNAL SERVER ERROR !");
   }
 });
-server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
-  try {
-    const result = await orderModel.find({ buyer: "Parbat" });
-    res.status(200).send(result)
-  } catch (error) {
-    res.status(500).send("500 INTERNAL SERVER ERROR");
-  }
+server.get("/api/v4/getOrderHistories", async (req: Request, res: Response) => {
+  
 })
 
 

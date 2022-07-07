@@ -170,9 +170,10 @@ server.post("/api/v4/order", async (req: Request, res: Response) => {
   }
 });
 server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
+  
   try {
     const result = await orderModel.find({ buyer: "Parbat" });
-    res.status(200).send(result)
+    console.log(result)
   } catch (error) {
     res.status(500).send("500 INTERNAL SERVER ERROR");
   }

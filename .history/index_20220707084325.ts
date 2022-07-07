@@ -10,9 +10,6 @@ const cookieParser = require("cookie-parser");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
-const orderModel = require("./db/models/orderModel");
-const isProductGenuine = require("./db/library/checkProduct");
-const calculatePrice = require("./db/library/calculatePrice");
 
 // ***** -> server instances || config  <- *****
 const server = express();
@@ -69,7 +66,15 @@ server.post("/api/v4/admin/createBakeryItem", async(req: Request, res: Response)
  
  res.send("Item created successfully !");
 });
-
+server.get("/api/v4/admin/getItemDetails", async(req: Request, res: Response) => {
+ // db mapping
+ try {
+  const items = await itemsModel.find();
+  res.status(200).send(items);
+ } catch (error) {
+  res.status(500).send("500 INTERNAL SERVER ERORR !!");
+ }
+});
 
 // customer routes
 server.post("/api/v4/customer/register", async (req: Request, res: Response) => {
@@ -92,91 +97,22 @@ server.post("/api/v4/customer/login", async(req: Request, res: Response) => {
   // db mapping
   try {
     const result = await customerModel.find({ email, password });
-    return res.status(200).send({
-      message: "User logged in successfully.",
-      data: {
-        username: result[0].username
-      },
-      token: {}
-    });
+    console.log(result)
   } catch (error) {
-    return res.status(500).send("500 Failed to login user.");
+    res.status(500).send("500 Failed to login user.")
   }
+  res.status(200).send({
+    message: "User registered successfully.",
+    data: {},
+    token:{}
+  })
+});
+server.get("/api/v4/customer/getProducts", (req: Request, res: Response) => {
 });
 server.post("/api/v4/customer/order", (req: Request, res: Response) => {
 });
 server.get("/api/v4/admin/getHistories", (req: Request, res: Response) => {
 });
-
-
-
-//  ********* ->  Product  <- *********
-server.get("/api/v4/product/getProducts", async (req: Request, res: Response) => {
-  // db mapping
-  try {
-    const items = await itemsModel.find();
-    res.status(200).send(items);
-  } catch (error) {
-    res.status(500).send("500 INTERNAL SERVER ERORR !!");
-  }
-});
-server.get("/api/v4/product/getDetails", async (req: Request, res: Response) => {
-  // destructuring id from req objects
-  const { _id } = req.body;
-  
-  // db mapping
-  try {
-    const items = await itemsModel.find({_id});
-    return res.status(200).send(items);
-  } catch (error) {
-    return res.status(500).send("Items not found !!");
-  }
-});
-
-// ********* -> ORDER & BILLING  <- ********
-server.post("/api/v4/order", async (req: Request, res: Response) => {
-  // destructuring incoming req object
-  const { product_id, product_name, quantity } = req.body;
-  
-  // db logic
-  try {
-    // check if product is genuine or not
-    if (!isProductGenuine(product_id))
-      return res.status(404).send("Product not found !!");
-    
-    // get the sp of given product
-    const itemObject = await itemsModel.find({ type: product_name });
-    const { sp } = itemObject[0];
-    
-    // calculate price
-    const price = calculatePrice(quantity, sp);
-    const date = new Date().toLocaleDateString();
-    
-    // insert the order
-    const data = new orderModel({ product_id, product_name, quantity, price, buyer:"Parbat", createdOn:date });
-    const result = await data.save();
-    return res.status(200).send({
-      message: `Order placed successfully !!. Your order ID is ${result._id}`,
-      bill: {
-        order_id: result._id,
-        quantity: quantity,
-        price: price,
-        buyer:"Parbat",
-        date:date
-      }
-    });
-  } catch (error) {
-    return res.status(500).send("500 INTERNAL SERVER ERROR !");
-  }
-});
-server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
-  try {
-    const result = await orderModel.find({ buyer: "Parbat" });
-    res.status(200).send(result)
-  } catch (error) {
-    res.status(500).send("500 INTERNAL SERVER ERROR");
-  }
-})
 
 
 // ***** -> port listener  <-  *****
