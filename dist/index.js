@@ -17,9 +17,11 @@ const cookieParser = require("cookie-parser");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
+const adminModel = require("./db/models/adminModel");
 const orderModel = require("./db/models/orderModel");
 const isProductGenuine = require("./db/library/checkProduct");
 const calculatePrice = require("./db/library/calculatePrice");
+const auth = require("./middlewares/auth");
 const server = express();
 const PORT = process.env.PORT || 8080;
 server.use(cors());
@@ -29,7 +31,23 @@ server.get("/", (req, res) => {
     console.log("server has started");
     res.status(200).send("server has started");
 });
-server.post("/api/v4/admin/addIngredients", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+server.post("/api/v4/admin/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    try {
+        const result = yield adminModel.find({ email, password });
+        return res.status(200).send({
+            message: "Admin logged in successfully.",
+            data: {
+                username: result[0].username
+            },
+            token: auth.GenerateJWT(result[0].email)
+        });
+    }
+    catch (error) {
+        return res.status(500).send("500 Failed to login admin.");
+    }
+}));
+server.post("/api/v4/admin/addIngredients", auth.VerifyJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { ingredients } = req.body;
     try {
         const data = yield new ingredientsModel({
@@ -43,7 +61,7 @@ server.post("/api/v4/admin/addIngredients", (req, res) => __awaiter(void 0, void
     }
     res.status(200).send("Ingredients added succesfully");
 }));
-server.post("/api/v4/admin/createBakeryItem", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+server.post("/api/v4/admin/createBakeryItem", auth.VerifyJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { type, ingredientDetails, cp, sp } = req.body;
     try {
         const data = yield new itemsModel({
@@ -80,18 +98,18 @@ server.post("/api/v4/customer/login", (req, res) => __awaiter(void 0, void 0, vo
             data: {
                 username: result[0].username
             },
-            token: {}
+            token: auth.GenerateJWT(result[0].email)
         });
     }
     catch (error) {
         return res.status(500).send("500 Failed to login user.");
     }
 }));
-server.post("/api/v4/customer/order", (req, res) => {
+server.post("/api/v4/customer/order", auth.VerifyJWT, (req, res) => {
 });
-server.get("/api/v4/admin/getHistories", (req, res) => {
+server.get("/api/v4/admin/getHistories", auth.VerifyJWT, (req, res) => {
 });
-server.get("/api/v4/product/getProducts", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+server.get("/api/v4/product/getProducts", auth.VerifyJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const items = yield itemsModel.find();
         res.status(200).send(items);
@@ -100,7 +118,7 @@ server.get("/api/v4/product/getProducts", (req, res) => __awaiter(void 0, void 0
         res.status(500).send("500 INTERNAL SERVER ERORR !!");
     }
 }));
-server.get("/api/v4/product/getDetails", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+server.get("/api/v4/product/getDetails", auth.VerifyJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id } = req.body;
     try {
         const items = yield itemsModel.find({ _id });
@@ -110,7 +128,7 @@ server.get("/api/v4/product/getDetails", (req, res) => __awaiter(void 0, void 0,
         return res.status(500).send("Items not found !!");
     }
 }));
-server.post("/api/v4/order", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+server.post("/api/v4/order", auth.VerifyJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { product_id, product_name, quantity } = req.body;
     try {
         if (!isProductGenuine(product_id))
@@ -136,7 +154,7 @@ server.post("/api/v4/order", (req, res) => __awaiter(void 0, void 0, void 0, fun
         return res.status(500).send("500 INTERNAL SERVER ERROR !");
     }
 }));
-server.get("/api/v4/orderHistories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+server.get("/api/v4/orderHistories", auth.VerifyJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield orderModel.find({ buyer: "Parbat" });
         res.status(200).send(result);

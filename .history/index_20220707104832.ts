@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
-const adminModel = require("./db/models/adminModel");
+const adminModel = require("./db/models/customerModel");
 const orderModel = require("./db/models/orderModel");
 const isProductGenuine = require("./db/library/checkProduct");
 const calculatePrice = require("./db/library/calculatePrice");
@@ -41,6 +41,7 @@ server.post("/api/v4/admin/login", async (req: Request, res: Response) => {
   // db mapping
   try {
     const result = await adminModel.find({ email, password });
+    console.log(result)
     return res.status(200).send({
       message: "Admin logged in successfully.",
       data: {

@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
-const adminModel = require("./db/models/adminModel");
+const adminModel = require("./db/models/customerModel");
 const orderModel = require("./db/models/orderModel");
 const isProductGenuine = require("./db/library/checkProduct");
 const calculatePrice = require("./db/library/calculatePrice");
@@ -49,7 +49,7 @@ server.post("/api/v4/admin/login", async (req: Request, res: Response) => {
       token: auth.GenerateJWT(result[0].email)
     });
   } catch (error) {
-    return res.status(500).send("500 Failed to login admin.");
+    return res.status(500).send(error);
   }
 });
 server.post("/api/v4/admin/addIngredients", auth.VerifyJWT, async (req: Request, res: Response) => {

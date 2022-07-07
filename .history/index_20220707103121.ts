@@ -10,7 +10,6 @@ const cookieParser = require("cookie-parser");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
-const adminModel = require("./db/models/adminModel");
 const orderModel = require("./db/models/orderModel");
 const isProductGenuine = require("./db/library/checkProduct");
 const calculatePrice = require("./db/library/calculatePrice");
@@ -34,25 +33,7 @@ server.get("/", (req: Request, res: Response) => {
 });
 
 // admin routes
-server.post("/api/v4/admin/login", async (req: Request, res: Response) => {
-  // destructuring incoming req object
-  const { email, password } = req.body;
-  
-  // db mapping
-  try {
-    const result = await adminModel.find({ email, password });
-    return res.status(200).send({
-      message: "Admin logged in successfully.",
-      data: {
-        username: result[0].username
-      },
-      token: auth.GenerateJWT(result[0].email)
-    });
-  } catch (error) {
-    return res.status(500).send("500 Failed to login admin.");
-  }
-});
-server.post("/api/v4/admin/addIngredients", auth.VerifyJWT, async (req: Request, res: Response) => {
+server.post("/api/v4/admin/addIngredients", async (req: Request, res: Response) => {
  // destructuring incoming req objects
  const { ingredients } = req.body;
  
@@ -69,7 +50,7 @@ server.post("/api/v4/admin/addIngredients", auth.VerifyJWT, async (req: Request,
   
  res.status(200).send("Ingredients added succesfully");
 });
-server.post("/api/v4/admin/createBakeryItem", auth.VerifyJWT, async(req: Request, res: Response) => {
+server.post("/api/v4/admin/createBakeryItem", async(req: Request, res: Response) => {
   // destructuring incoming req objects
  const { type, ingredientDetails, cp, sp } = req.body;
  
@@ -112,6 +93,7 @@ server.post("/api/v4/customer/login", async(req: Request, res: Response) => {
   // db mapping
   try {
     const result = await customerModel.find({ email, password });
+    console.log(auth.GenerateJWT(result[0].email))
     return res.status(200).send({
       message: "User logged in successfully.",
       data: {
@@ -123,9 +105,9 @@ server.post("/api/v4/customer/login", async(req: Request, res: Response) => {
     return res.status(500).send("500 Failed to login user.");
   }
 });
-server.post("/api/v4/customer/order", auth.VerifyJWT, (req: Request, res: Response) => {
+server.post("/api/v4/customer/order", (req: Request, res: Response) => {
 });
-server.get("/api/v4/admin/getHistories", auth.VerifyJWT, (req: Request, res: Response) => {
+server.get("/api/v4/admin/getHistories", (req: Request, res: Response) => {
 });
 
 
@@ -140,7 +122,7 @@ server.get("/api/v4/product/getProducts", auth.VerifyJWT, async (req: Request, r
     res.status(500).send("500 INTERNAL SERVER ERORR !!");
   }
 });
-server.get("/api/v4/product/getDetails", auth.VerifyJWT, async (req: Request, res: Response) => {
+server.get("/api/v4/product/getDetails", async (req: Request, res: Response) => {
   // destructuring id from req objects
   const { _id } = req.body;
   
@@ -154,7 +136,7 @@ server.get("/api/v4/product/getDetails", auth.VerifyJWT, async (req: Request, re
 });
 
 // ********* -> ORDER & BILLING  <- ********
-server.post("/api/v4/order", auth.VerifyJWT, async (req: Request, res: Response) => {
+server.post("/api/v4/order", async (req: Request, res: Response) => {
   // destructuring incoming req object
   const { product_id, product_name, quantity } = req.body;
   
@@ -189,7 +171,7 @@ server.post("/api/v4/order", auth.VerifyJWT, async (req: Request, res: Response)
     return res.status(500).send("500 INTERNAL SERVER ERROR !");
   }
 });
-server.get("/api/v4/orderHistories", auth.VerifyJWT, async (req: Request, res: Response) => {
+server.get("/api/v4/orderHistories", async (req: Request, res: Response) => {
   try {
     const result = await orderModel.find({ buyer: "Parbat" });
     res.status(200).send(result)
