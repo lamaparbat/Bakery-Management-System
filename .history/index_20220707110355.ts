@@ -107,9 +107,9 @@ server.post("/api/v4/customer/register", async (req: Request, res: Response) => 
     const data = new customerModel({ username, email, password:encrypted_password });
     const result = await data.save();
   } catch (error) {
-    return res.status(500).send("Failed to register.")
+    res.status(500).send("500 Failed to register user.")
   }
-  return res.status(200).send("User registered successfully.")
+  res.status(200).send("User registered successfully.")
 });
 server.post("/api/v4/customer/login", async(req: Request, res: Response) => {
   // destructuring incoming req object
@@ -117,13 +117,7 @@ server.post("/api/v4/customer/login", async(req: Request, res: Response) => {
   
   // db mapping
   try {
-    const result = await customerModel.find({ email });
-
-    // decrypting password
-    const ispasswordValid = await bcrypt.compare(password, result[0].password)
-
-    !ispasswordValid && res.status(404).send("Invalid password !!");
-    
+    const result = await customerModel.find({ email, password });
     return res.status(200).send({
       message: "User logged in successfully.",
       data: {

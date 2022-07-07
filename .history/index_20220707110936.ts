@@ -118,9 +118,9 @@ server.post("/api/v4/customer/login", async(req: Request, res: Response) => {
   // db mapping
   try {
     const result = await customerModel.find({ email });
-
+    console.log(result)
     // decrypting password
-    const ispasswordValid = await bcrypt.compare(password, result[0].password)
+    const ispasswordValid = await bcrypt.compare(password, result.password)
 
     !ispasswordValid && res.status(404).send("Invalid password !!");
     

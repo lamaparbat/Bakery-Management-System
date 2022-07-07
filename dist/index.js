@@ -14,6 +14,7 @@ require("./db/Connection.js");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 const ingredientsModel = require("./db/models/incredientsModel");
 const itemsModel = require("./db/models/itemModel");
 const customerModel = require("./db/models/customerModel");
@@ -80,19 +81,23 @@ server.post("/api/v4/admin/createBakeryItem", auth.VerifyJWT, (req, res) => __aw
 }));
 server.post("/api/v4/customer/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, email, password } = req.body;
+    const HASH_SALT_ROUND = process.env.HASH_SALT_ROUND;
+    const encrypted_password = HASH_SALT_ROUND && (yield bcrypt.hash(password, parseInt(HASH_SALT_ROUND)));
     try {
-        const data = new customerModel({ username, email, password });
+        const data = new customerModel({ username, email, password: encrypted_password });
         const result = yield data.save();
     }
     catch (error) {
-        res.status(500).send("500 Failed to register user.");
+        return res.status(500).send("Failed to register.");
     }
-    res.status(200).send("User registered successfully.");
+    return res.status(200).send("User registered successfully.");
 }));
 server.post("/api/v4/customer/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
-        const result = yield customerModel.find({ email, password });
+        const result = yield customerModel.find({ email });
+        const ispasswordValid = yield bcrypt.compare(password, result[0].password);
+        !ispasswordValid && res.status(404).send("Invalid password !!");
         return res.status(200).send({
             message: "User logged in successfully.",
             data: {
